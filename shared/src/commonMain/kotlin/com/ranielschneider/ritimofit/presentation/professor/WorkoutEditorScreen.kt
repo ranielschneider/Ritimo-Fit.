@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.ranielschneider.ritimofit.core.design.background.RitimoAmbientBackground
 import com.ranielschneider.ritimofit.core.design.components.button.RitimoIconButton
 import com.ranielschneider.ritimofit.core.design.components.button.RitimoPrimaryButton
@@ -65,6 +67,7 @@ fun WorkoutEditorScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(horizontal = RitimoTheme.spacing.lg)
+                .navigationBarsPadding()
         ) {
             Spacer(modifier = Modifier.height(RitimoTheme.spacing.lg))
 
@@ -208,7 +211,7 @@ fun WorkoutEditorScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(RitimoTheme.spacing.xxl))
+            Spacer(modifier = Modifier.height(120.dp))
         }
     }
 }

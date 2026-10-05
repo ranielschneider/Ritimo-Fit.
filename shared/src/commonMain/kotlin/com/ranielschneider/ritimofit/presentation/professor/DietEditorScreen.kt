@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -25,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import com.ranielschneider.ritimofit.core.design.background.RitimoAmbientBackground
 import com.ranielschneider.ritimofit.core.design.components.button.RitimoIconButton
 import com.ranielschneider.ritimofit.core.design.components.button.RitimoPrimaryButton
@@ -78,6 +80,7 @@ fun DietEditorScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(horizontal = RitimoTheme.spacing.lg)
+                .navigationBarsPadding()
         ) {
             Spacer(modifier = Modifier.height(RitimoTheme.spacing.lg))
 
@@ -262,7 +265,8 @@ fun DietEditorScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(RitimoTheme.spacing.xxl))
+            // Extra bottom spacing so the save button and last meal scroll completely clear of the floating bottom navigation bar
+            Spacer(modifier = Modifier.height(120.dp))
         }
 
         // Add Meal Dialog
