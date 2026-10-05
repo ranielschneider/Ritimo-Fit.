@@ -20,6 +20,7 @@ import com.ranielschneider.ritimofit.presentation.navigation.ProfessorRoute
 import com.ranielschneider.ritimofit.presentation.navigation.RitimoBottomNavigation
 import com.ranielschneider.ritimofit.presentation.navigation.RoutePlaceholderScreen
 import com.ranielschneider.ritimofit.presentation.navigation.StudentsSubRoute
+import com.ranielschneider.ritimofit.presentation.viewmodel.DietViewModel
 import com.ranielschneider.ritimofit.presentation.viewmodel.ExerciseViewModel
 import com.ranielschneider.ritimofit.presentation.viewmodel.WorkoutViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -121,6 +122,7 @@ fun ProfessorAppShell(
                 }
                 is ProfessorRoute.Planning -> {
                     val workoutVM: WorkoutViewModel = koinViewModel()
+                    val dietVM: DietViewModel = koinViewModel()
 
                     when (val subRoute = currentRoute.subRoute) {
                         is PlanningSubRoute.Workouts -> {
@@ -190,19 +192,38 @@ fun ProfessorAppShell(
                             }
                         }
                         is PlanningSubRoute.Diets -> {
-                            RoutePlaceholderScreen(
-                                badgeText = "ÁREA DO PROFESSOR",
-                                title = "Prescrição de Dietas",
-                                description = "Elabore e monte planos alimentares para seus alunos.",
-                                subTabs = listOf("Treinos", "Dietas", "Exercícios"),
-                                activeTab = "Dietas",
+                            DietListScreen(
+                                onCreateDiet = {
+                                    dietVM.initNewDiet()
+                                    viewModel.navigateToProfessorRoute(
+                                        ProfessorRoute.Planning(PlanningSubRoute.DietEditor())
+                                    )
+                                },
+                                onEditDiet = { dietId ->
+                                    dietVM.loadDietForEditing(dietId)
+                                    viewModel.navigateToProfessorRoute(
+                                        ProfessorRoute.Planning(PlanningSubRoute.DietEditor(dietId = dietId))
+                                    )
+                                },
                                 onTabSelected = { tab ->
                                     when (tab) {
                                         "Treinos" -> viewModel.navigateToProfessorRoute(ProfessorRoute.Planning(PlanningSubRoute.Workouts))
                                         "Dietas" -> viewModel.navigateToProfessorRoute(ProfessorRoute.Planning(PlanningSubRoute.Diets))
                                         "Exercícios" -> viewModel.navigateToProfessorRoute(ProfessorRoute.Planning(PlanningSubRoute.Exercises()))
                                     }
-                                }
+                                },
+                                viewModel = dietVM
+                            )
+                        }
+                        is PlanningSubRoute.DietEditor -> {
+                            DietEditorScreen(
+                                dietIdToEdit = subRoute.dietId,
+                                onBack = {
+                                    viewModel.navigateToProfessorRoute(
+                                        ProfessorRoute.Planning(PlanningSubRoute.Diets)
+                                    )
+                                },
+                                viewModel = dietVM
                             )
                         }
                         is PlanningSubRoute.Exercises -> {

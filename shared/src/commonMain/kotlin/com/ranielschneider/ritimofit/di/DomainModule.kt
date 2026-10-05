@@ -2,8 +2,11 @@ package com.ranielschneider.ritimofit.di
 
 import com.ranielschneider.ritimofit.domain.usecase.AssignWorkoutToStudentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.CompleteWorkoutUseCase
+import com.ranielschneider.ritimofit.domain.usecase.DeleteDietUseCase
 import com.ranielschneider.ritimofit.domain.usecase.ForgotPasswordUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetCurrentUserUseCase
+import com.ranielschneider.ritimofit.domain.usecase.GetDietDetailUseCase
+import com.ranielschneider.ritimofit.domain.usecase.GetDietsForProfessorUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetExerciseCatalogUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetExerciseDetailUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentDetailUseCase
@@ -17,6 +20,7 @@ import com.ranielschneider.ritimofit.domain.usecase.GetWorkoutsForProfessorUseCa
 import com.ranielschneider.ritimofit.domain.usecase.LoginUseCase
 import com.ranielschneider.ritimofit.domain.usecase.RegisterUserUseCase
 import com.ranielschneider.ritimofit.domain.usecase.RemoveWorkoutAssignmentUseCase
+import com.ranielschneider.ritimofit.domain.usecase.SaveDietUseCase
 import com.ranielschneider.ritimofit.domain.usecase.SaveWorkoutUseCase
 import com.ranielschneider.ritimofit.domain.usecase.UpdateWaterConsumptionUseCase
 import org.koin.dsl.module
@@ -38,6 +42,10 @@ val domainModule = module {
     factory { GetWorkoutCompletionsForStudentUseCase(get(), get()) }
     factory { GetWaterTrackingUseCase(get()) }
     factory { UpdateWaterConsumptionUseCase(get()) }
+    factory { GetDietsForProfessorUseCase(get(), get()) }
+    factory { SaveDietUseCase(get(), get()) }
+    factory { GetDietDetailUseCase(get()) }
+    factory { DeleteDietUseCase(get()) }
     factory { LoginUseCase(get()) }
     factory { ForgotPasswordUseCase(get()) }
     factory { RegisterUserUseCase(get()) }

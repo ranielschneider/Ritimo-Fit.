@@ -3,6 +3,7 @@ package com.ranielschneider.ritimofit.di
 import com.ranielschneider.ritimofit.presentation.auth.AuthViewModel
 import com.ranielschneider.ritimofit.presentation.navigation.MainNavigationViewModel
 import com.ranielschneider.ritimofit.presentation.professor.ProfessorDashboardViewModel
+import com.ranielschneider.ritimofit.presentation.viewmodel.DietViewModel
 import com.ranielschneider.ritimofit.presentation.viewmodel.ExerciseViewModel
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentDetailViewModel
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentListViewModel
@@ -24,4 +25,5 @@ val viewModelModule = module {
     viewModelOf(::StudentWorkoutAssignmentViewModel)
     viewModelOf(::StudentTodayViewModel)
     viewModelOf(::StudentWorkoutsViewModel)
+    viewModelOf(::DietViewModel)
 }

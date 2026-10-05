@@ -32,6 +32,7 @@ sealed interface PlanningSubRoute {
     data class WorkoutEditor(val workoutId: String? = null) : PlanningSubRoute
     data class ExercisePicker(val workoutId: String? = null) : PlanningSubRoute
     data object Diets : PlanningSubRoute
+    data class DietEditor(val dietId: String? = null) : PlanningSubRoute
     data class Exercises(val selectedExerciseId: String? = null) : PlanningSubRoute
 }
 
