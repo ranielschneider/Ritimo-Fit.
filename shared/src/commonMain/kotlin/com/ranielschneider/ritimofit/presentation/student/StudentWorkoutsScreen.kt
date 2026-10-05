@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ranielschneider.ritimofit.core.design.background.RitimoAmbientBackground
 import com.ranielschneider.ritimofit.core.design.components.button.RitimoPrimaryButton
+import com.ranielschneider.ritimofit.core.design.components.button.RitimoSecondaryButton
 import com.ranielschneider.ritimofit.core.design.components.card.RitimoGlassCard
 import com.ranielschneider.ritimofit.core.design.components.indicator.BadgeType
 import com.ranielschneider.ritimofit.core.design.components.indicator.RitimoStatusBadge
@@ -47,6 +48,8 @@ fun StudentWorkoutsScreen(
     viewModel: StudentWorkoutsViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val completions by viewModel.completionsState.collectAsState()
+    val historyState by viewModel.historyUiState.collectAsState()
     val selectedSubTab by viewModel.selectedSubTab.collectAsState()
     val scrollState = rememberScrollState()
 
@@ -158,6 +161,117 @@ fun StudentWorkoutsScreen(
                                 ) {
                                     assignedDetails.forEach { details ->
                                         val workout = details.workout
+                                        val isCompleted = completions.any { it.workoutId == workout.id }
+
+                                        RitimoGlassCard(modifier = Modifier.fillMaxWidth()) {
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(RitimoTheme.spacing.xs)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Text(
+                                                        text = workout.title,
+                                                        style = RitimoTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                                        color = RitimoTheme.colors.onSurface
+                                                    )
+
+                                                    if (isCompleted) {
+                                                        RitimoStatusBadge(
+                                                            text = "CONCLUÍDO HOJE",
+                                                            type = BadgeType.PRIMARY
+                                                        )
+                                                    } else {
+                                                        RitimoStatusBadge(
+                                                            text = "${workout.exercises.size} EXERCÍCIOS",
+                                                            type = BadgeType.NEUTRAL
+                                                        )
+                                                    }
+                                                }
+
+                                                if (!workout.description.isNullOrBlank()) {
+                                                    Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
+                                                    Text(
+                                                        text = workout.description,
+                                                        style = RitimoTheme.typography.bodyMedium,
+                                                        color = RitimoTheme.colors.onSurfaceVariant
+                                                    )
+                                                }
+
+                                                Spacer(modifier = Modifier.height(RitimoTheme.spacing.lg))
+
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.sm)
+                                                ) {
+                                                    RitimoPrimaryButton(
+                                                        text = "Ver treino",
+                                                        onClick = { onViewWorkoutDetail(workout.id) },
+                                                        modifier = Modifier.weight(1f)
+                                                    )
+
+                                                    if (!isCompleted) {
+                                                        RitimoSecondaryButton(
+                                                            text = "Marcar concluído",
+                                                            onClick = { viewModel.completeWorkout(workout.id) },
+                                                            icon = RitimoIcons.Check,
+                                                            modifier = Modifier.weight(1f)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else -> {}
+                    }
+                }
+                is WorkoutsSubRoute.UpcomingWorkouts -> {
+                    RitimoEmptyState(
+                        title = "Nenhum treino agendado",
+                        description = "Os treinos futuros aparecerão aqui quando forem agendados.",
+                        icon = RitimoIcons.Workouts,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                is WorkoutsSubRoute.History -> {
+                    when (val state = historyState) {
+                        is UiState.Loading -> {
+                            RitimoLoadingState(
+                                message = "Carregando histórico de conclusões...",
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        is UiState.Error -> {
+                            RitimoErrorState(
+                                title = "Erro ao carregar histórico",
+                                message = "Não foi possível carregar seu histórico de treinos.",
+                                onRetry = { viewModel.loadStudentWorkouts() },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        is UiState.Success -> {
+                            val completedList = state.data
+                            if (completedList.isEmpty()) {
+                                RitimoEmptyState(
+                                    title = "Nenhum histórico ainda",
+                                    description = "Seu histórico de treinos concluídos aparecerá aqui.",
+                                    icon = RitimoIcons.Workouts,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            } else {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.md),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    completedList.forEach { details ->
+                                        val workout = details.workout
                                         RitimoGlassCard(modifier = Modifier.fillMaxWidth()) {
                                             Column(
                                                 modifier = Modifier
@@ -176,10 +290,17 @@ fun StudentWorkoutsScreen(
                                                     )
 
                                                     RitimoStatusBadge(
-                                                        text = "${workout.exercises.size} EXERCÍCIOS",
+                                                        text = "CONCLUÍDO",
                                                         type = BadgeType.PRIMARY
                                                     )
                                                 }
+
+                                                Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
+
+                                                RitimoStatusBadge(
+                                                    text = "${workout.exercises.size} EXERCÍCIOS CONCLUÍDOS",
+                                                    type = BadgeType.NEUTRAL
+                                                )
 
                                                 if (!workout.description.isNullOrBlank()) {
                                                     Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
@@ -205,22 +326,6 @@ fun StudentWorkoutsScreen(
                         }
                         else -> {}
                     }
-                }
-                is WorkoutsSubRoute.UpcomingWorkouts -> {
-                    RitimoEmptyState(
-                        title = "Nenhum treino agendado",
-                        description = "Os treinos futuros aparecerão aqui quando forem agendados.",
-                        icon = RitimoIcons.Workouts,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                is WorkoutsSubRoute.History -> {
-                    RitimoEmptyState(
-                        title = "Nenhum histórico ainda",
-                        description = "Seu histórico de treinos concluídos aparecerá aqui.",
-                        icon = RitimoIcons.Workouts,
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
             }
 

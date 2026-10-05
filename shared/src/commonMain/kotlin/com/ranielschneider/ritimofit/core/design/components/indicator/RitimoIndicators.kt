@@ -88,7 +88,9 @@ fun RitimoStatusBadge(
         Text(
             text = text,
             color = textColor,
-            style = RitimoTheme.typography.labelSmall
+            style = RitimoTheme.typography.labelSmall,
+            maxLines = 1,
+            softWrap = false
         )
     }
 }

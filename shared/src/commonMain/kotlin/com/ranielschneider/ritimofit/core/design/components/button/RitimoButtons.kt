@@ -48,7 +48,7 @@ fun RitimoPrimaryButton(
             disabledContainerColor = RitimoTheme.colors.surfaceVariant,
             disabledContentColor = RitimoTheme.colors.onSurfaceVariant.copy(alpha = 0.5f)
         ),
-        contentPadding = PaddingValues(horizontal = RitimoTheme.spacing.lg, vertical = RitimoTheme.spacing.sm)
+        contentPadding = PaddingValues(horizontal = RitimoTheme.spacing.md, vertical = RitimoTheme.spacing.xs)
     ) {
         if (isLoading) {
             CircularProgressIndicator(
@@ -71,7 +71,9 @@ fun RitimoPrimaryButton(
                     style = RitimoTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.3.sp
-                    )
+                    ),
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
         }
@@ -98,7 +100,7 @@ fun RitimoSecondaryButton(
             contentColor = RitimoTheme.colors.onSurface,
             disabledContentColor = RitimoTheme.colors.onSurfaceVariant
         ),
-        contentPadding = PaddingValues(horizontal = RitimoTheme.spacing.lg, vertical = RitimoTheme.spacing.sm)
+        contentPadding = PaddingValues(horizontal = RitimoTheme.spacing.md, vertical = RitimoTheme.spacing.xs)
     ) {
         if (isLoading) {
             CircularProgressIndicator(
@@ -118,7 +120,9 @@ fun RitimoSecondaryButton(
                 }
                 Text(
                     text = text,
-                    style = RitimoTheme.typography.titleMedium
+                    style = RitimoTheme.typography.titleMedium,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
         }
@@ -153,7 +157,9 @@ fun RitimoTertiaryButton(
             }
             Text(
                 text = text,
-                style = RitimoTheme.typography.titleSmall
+                style = RitimoTheme.typography.titleSmall,
+                maxLines = 1,
+                softWrap = false
             )
         }
     }
