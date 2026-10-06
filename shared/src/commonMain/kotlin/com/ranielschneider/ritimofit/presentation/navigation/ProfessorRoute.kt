@@ -15,6 +15,8 @@ sealed interface StudentsSubRoute {
         val tab: StudentDetailTab = StudentDetailTab.Overview
     ) : StudentsSubRoute
     data class AssignWorkoutPicker(val studentId: String) : StudentsSubRoute
+    data class AssignDietPicker(val studentId: String) : StudentsSubRoute
+    data class ViewingDietDetail(val studentId: String, val dietId: String) : StudentsSubRoute
 }
 
 enum class StudentDetailTab {

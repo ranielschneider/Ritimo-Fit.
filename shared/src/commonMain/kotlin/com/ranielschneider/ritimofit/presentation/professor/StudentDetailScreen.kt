@@ -45,6 +45,7 @@ import com.ranielschneider.ritimofit.domain.model.Student
 import com.ranielschneider.ritimofit.presentation.base.UiState
 import com.ranielschneider.ritimofit.presentation.navigation.StudentDetailTab
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentDetailViewModel
+import com.ranielschneider.ritimofit.presentation.viewmodel.StudentDietAssignmentViewModel
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentWorkoutAssignmentViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -53,6 +54,8 @@ fun StudentDetailScreen(
     studentId: String,
     onBack: () -> Unit,
     onNavigateToAssignWorkoutPicker: () -> Unit,
+    onNavigateToAssignDietPicker: () -> Unit,
+    onViewDietDetail: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: StudentDetailViewModel = koinViewModel()
 ) {
@@ -116,6 +119,13 @@ fun StudentDetailScreen(
                             StudentWorkoutTabContent(
                                 studentId = studentId,
                                 onNavigateToAssignWorkoutPicker = onNavigateToAssignWorkoutPicker
+                            )
+                        }
+                        StudentDetailTab.Diet -> {
+                            StudentDietTabContent(
+                                studentId = studentId,
+                                onNavigateToAssignDietPicker = onNavigateToAssignDietPicker,
+                                onViewDietDetail = onViewDietDetail
                             )
                         }
                         else -> {
@@ -355,6 +365,146 @@ private fun StudentWorkoutTabContent(
                                         onClick = {
                                             viewModel.removeAssignment(studentId, details.workout.id)
                                         }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else -> {}
+        }
+    }
+}
+
+@Composable
+private fun StudentDietTabContent(
+    studentId: String,
+    onNavigateToAssignDietPicker: () -> Unit,
+    onViewDietDetail: (String) -> Unit,
+    viewModel: StudentDietAssignmentViewModel = koinViewModel()
+) {
+    LaunchedEffect(studentId) {
+        viewModel.loadStudentAssignments(studentId)
+    }
+
+    val assignedState by viewModel.assignedDietsUiState.collectAsState()
+
+    Column(verticalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.lg)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Plano Alimentar Atribuído",
+                    style = RitimoTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = RitimoTheme.colors.onBackground
+                )
+                Spacer(modifier = Modifier.height(RitimoTheme.spacing.xxs))
+                Text(
+                    text = "Acompanhamento nutricional do aluno",
+                    style = RitimoTheme.typography.bodyMedium,
+                    color = RitimoTheme.colors.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.width(RitimoTheme.spacing.xs))
+
+            RitimoPrimaryButton(
+                text = "+ Atribuir",
+                onClick = onNavigateToAssignDietPicker
+            )
+        }
+
+        when (val state = assignedState) {
+            is UiState.Loading -> {
+                RitimoLoadingState(
+                    message = "Carregando plano alimentar...",
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            is UiState.Error -> {
+                RitimoErrorState(
+                    title = "Erro ao carregar dieta",
+                    message = "Não foi possível carregar o plano alimentar deste aluno.",
+                    onRetry = { viewModel.loadStudentAssignments(studentId) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            is UiState.Success -> {
+                val assignedList = state.data
+                if (assignedList.isEmpty()) {
+                    RitimoEmptyState(
+                        title = "Nenhuma dieta atribuída",
+                        description = "Este aluno ainda não possui uma dieta atribuída.",
+                        icon = RitimoIcons.Diet,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.md)) {
+                        assignedList.forEach { details ->
+                            RitimoGlassCard(modifier = Modifier.fillMaxWidth()) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(RitimoTheme.spacing.xs)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = details.diet.title,
+                                            style = RitimoTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                            color = RitimoTheme.colors.onSurface
+                                        )
+
+                                        RitimoIconButton(
+                                            icon = RitimoIcons.Trash,
+                                            contentDescription = "Remover atribuição da dieta",
+                                            onClick = {
+                                                viewModel.removeAssignment(studentId, details.diet.id)
+                                            }
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(RitimoTheme.spacing.xxs))
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.xs)
+                                    ) {
+                                        RitimoStatusBadge(
+                                            text = "${details.diet.meals.size} REFEIÇÕES",
+                                            type = BadgeType.PRIMARY
+                                        )
+
+                                        if (details.diet.totalCalories != null && details.diet.totalCalories > 0) {
+                                            RitimoStatusBadge(
+                                                text = "${details.diet.totalCalories} KCAL",
+                                                type = BadgeType.NEUTRAL
+                                            )
+                                        }
+                                    }
+
+                                    if (!details.diet.description.isNullOrBlank()) {
+                                        Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
+                                        Text(
+                                            text = details.diet.description,
+                                            style = RitimoTheme.typography.bodyMedium,
+                                            color = RitimoTheme.colors.onSurfaceVariant
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(RitimoTheme.spacing.lg))
+
+                                    RitimoPrimaryButton(
+                                        text = "Ver dieta",
+                                        onClick = { onViewDietDetail(details.diet.id) },
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                             }

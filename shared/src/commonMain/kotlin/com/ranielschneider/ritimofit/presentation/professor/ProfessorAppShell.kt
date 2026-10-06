@@ -19,6 +19,7 @@ import com.ranielschneider.ritimofit.presentation.navigation.PlanningSubRoute
 import com.ranielschneider.ritimofit.presentation.navigation.ProfessorRoute
 import com.ranielschneider.ritimofit.presentation.navigation.RitimoBottomNavigation
 import com.ranielschneider.ritimofit.presentation.navigation.RoutePlaceholderScreen
+import com.ranielschneider.ritimofit.presentation.navigation.StudentDetailTab
 import com.ranielschneider.ritimofit.presentation.navigation.StudentsSubRoute
 import com.ranielschneider.ritimofit.presentation.viewmodel.DietViewModel
 import com.ranielschneider.ritimofit.presentation.viewmodel.ExerciseViewModel
@@ -105,6 +106,16 @@ fun ProfessorAppShell(
                                     viewModel.navigateToProfessorRoute(
                                         ProfessorRoute.Students(StudentsSubRoute.AssignWorkoutPicker(studentId = subRoute.studentId))
                                     )
+                                },
+                                onNavigateToAssignDietPicker = {
+                                    viewModel.navigateToProfessorRoute(
+                                        ProfessorRoute.Students(StudentsSubRoute.AssignDietPicker(studentId = subRoute.studentId))
+                                    )
+                                },
+                                onViewDietDetail = { dietId ->
+                                    viewModel.navigateToProfessorRoute(
+                                        ProfessorRoute.Students(StudentsSubRoute.ViewingDietDetail(studentId = subRoute.studentId, dietId = dietId))
+                                    )
                                 }
                             )
                         }
@@ -113,7 +124,27 @@ fun ProfessorAppShell(
                                 studentId = subRoute.studentId,
                                 onBack = {
                                     viewModel.navigateToProfessorRoute(
-                                        ProfessorRoute.Students(StudentsSubRoute.Detail(studentId = subRoute.studentId))
+                                        ProfessorRoute.Students(StudentsSubRoute.Detail(studentId = subRoute.studentId, tab = StudentDetailTab.Workout))
+                                    )
+                                }
+                            )
+                        }
+                        is StudentsSubRoute.AssignDietPicker -> {
+                            AssignDietPickerScreen(
+                                studentId = subRoute.studentId,
+                                onBack = {
+                                    viewModel.navigateToProfessorRoute(
+                                        ProfessorRoute.Students(StudentsSubRoute.Detail(studentId = subRoute.studentId, tab = StudentDetailTab.Diet))
+                                    )
+                                }
+                            )
+                        }
+                        is StudentsSubRoute.ViewingDietDetail -> {
+                            StudentDietDetailScreen(
+                                dietId = subRoute.dietId,
+                                onBack = {
+                                    viewModel.navigateToProfessorRoute(
+                                        ProfessorRoute.Students(StudentsSubRoute.Detail(studentId = subRoute.studentId, tab = StudentDetailTab.Diet))
                                     )
                                 }
                             )

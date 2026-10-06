@@ -1,9 +1,11 @@
 package com.ranielschneider.ritimofit.di
 
 import com.ranielschneider.ritimofit.data.datasource.AuthDataSource
+import com.ranielschneider.ritimofit.data.datasource.DietAssignmentDataSource
 import com.ranielschneider.ritimofit.data.datasource.DietDataSource
 import com.ranielschneider.ritimofit.data.datasource.ExerciseDataSource
 import com.ranielschneider.ritimofit.data.datasource.InMemoryAuthDataSource
+import com.ranielschneider.ritimofit.data.datasource.InMemoryDietAssignmentDataSource
 import com.ranielschneider.ritimofit.data.datasource.InMemoryDietDataSource
 import com.ranielschneider.ritimofit.data.datasource.InMemoryExerciseDataSource
 import com.ranielschneider.ritimofit.data.datasource.InMemoryStudentDataSource
@@ -17,6 +19,7 @@ import com.ranielschneider.ritimofit.data.datasource.WorkoutCompletionDataSource
 import com.ranielschneider.ritimofit.data.datasource.WorkoutDataSource
 import com.ranielschneider.ritimofit.data.datasource.WaterTrackingDataSource
 import com.ranielschneider.ritimofit.data.repository.AuthRepositoryImpl
+import com.ranielschneider.ritimofit.data.repository.DietAssignmentRepositoryImpl
 import com.ranielschneider.ritimofit.data.repository.DietRepositoryImpl
 import com.ranielschneider.ritimofit.data.repository.ExerciseRepositoryImpl
 import com.ranielschneider.ritimofit.data.repository.StudentRepositoryImpl
@@ -25,6 +28,7 @@ import com.ranielschneider.ritimofit.data.repository.WorkoutCompletionRepository
 import com.ranielschneider.ritimofit.data.repository.WorkoutRepositoryImpl
 import com.ranielschneider.ritimofit.data.repository.WaterTrackingRepositoryImpl
 import com.ranielschneider.ritimofit.domain.repository.AuthRepository
+import com.ranielschneider.ritimofit.domain.repository.DietAssignmentRepository
 import com.ranielschneider.ritimofit.domain.repository.DietRepository
 import com.ranielschneider.ritimofit.domain.repository.ExerciseRepository
 import com.ranielschneider.ritimofit.domain.repository.StudentRepository
@@ -41,6 +45,7 @@ val dataModule = module {
     single<ExerciseDataSource> { InMemoryExerciseDataSource() }
     single<DietDataSource> { InMemoryDietDataSource() }
     single<WorkoutAssignmentDataSource> { InMemoryWorkoutAssignmentDataSource() }
+    single<DietAssignmentDataSource> { InMemoryDietAssignmentDataSource() }
     single<WorkoutCompletionDataSource> { InMemoryWorkoutCompletionDataSource() }
     single<WaterTrackingDataSource> { InMemoryWaterTrackingDataSource() }
 
@@ -50,6 +55,7 @@ val dataModule = module {
     single<ExerciseRepository> { ExerciseRepositoryImpl(get(), get()) }
     single<DietRepository> { DietRepositoryImpl(get(), get()) }
     single<WorkoutAssignmentRepository> { WorkoutAssignmentRepositoryImpl(get(), get()) }
+    single<DietAssignmentRepository> { DietAssignmentRepositoryImpl(get(), get()) }
     single<WorkoutCompletionRepository> { WorkoutCompletionRepositoryImpl(get(), get()) }
     single<WaterTrackingRepository> { WaterTrackingRepositoryImpl(get(), get()) }
 }
