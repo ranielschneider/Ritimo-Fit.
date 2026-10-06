@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.ranielschneider.ritimofit.core.design.icons.RitimoIcons
-import com.ranielschneider.ritimofit.presentation.navigation.DietSubRoute
 import com.ranielschneider.ritimofit.presentation.navigation.MainNavigationViewModel
 import com.ranielschneider.ritimofit.presentation.navigation.NavigationTabItem
 import com.ranielschneider.ritimofit.presentation.navigation.RitimoBottomNavigation
@@ -123,25 +122,7 @@ fun StudentAppShell(
                     }
                 }
                 is StudentRoute.Diet -> {
-                    val subRoute = currentRoute.subRoute
-                    val activeSubTab = when (subRoute) {
-                        is DietSubRoute.TodayDiet -> "Hoje"
-                        is DietSubRoute.History -> "Histórico"
-                    }
-                    RoutePlaceholderScreen(
-                        badgeText = "ÁREA DO ALUNO",
-                        title = "Sua Dieta e Refeições",
-                        description = "Acompanhe seu plano alimentar, horários e horários de refeições recomendados.",
-                        subTabs = listOf("Hoje", "Histórico"),
-                        activeTab = activeSubTab,
-                        onTabSelected = { tab ->
-                            if (tab == "Hoje") {
-                                viewModel.navigateToStudentRoute(StudentRoute.Diet(DietSubRoute.TodayDiet))
-                            } else {
-                                viewModel.navigateToStudentRoute(StudentRoute.Diet(DietSubRoute.History))
-                            }
-                        }
-                    )
+                    StudentDietScreen()
                 }
                 is StudentRoute.Evolution -> {
                     RoutePlaceholderScreen(
