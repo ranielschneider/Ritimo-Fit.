@@ -36,6 +36,7 @@ import com.ranielschneider.ritimofit.core.design.components.state.RitimoErrorSta
 import com.ranielschneider.ritimofit.core.design.components.state.RitimoLoadingState
 import com.ranielschneider.ritimofit.core.design.icons.RitimoIcons
 import com.ranielschneider.ritimofit.core.design.theme.RitimoTheme
+import com.ranielschneider.ritimofit.domain.calculator.NutritionalCalculator
 import com.ranielschneider.ritimofit.domain.model.User
 import com.ranielschneider.ritimofit.domain.model.WaterTracking
 import com.ranielschneider.ritimofit.presentation.base.UiState
@@ -463,6 +464,11 @@ private fun NutritionSection(
     Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
 
     if (activeDiet != null) {
+        val completedMealsList = activeDiet.meals.filter { meal ->
+            data.mealCompletions.any { it.dietId == activeDiet.id && it.mealId == meal.id }
+        }
+        val consumedSummary = NutritionalCalculator.sumDietMacros(completedMealsList)
+
         RitimoGlassCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier
@@ -495,7 +501,7 @@ private fun NutritionSection(
                     )
                 }
 
-                // Macros summary badges
+                // Macros summary badges (Target vs Consumed)
                 if (activeDiet.totalCalories != null || activeDiet.proteinGrams != null || activeDiet.carbsGrams != null || activeDiet.fatsGrams != null) {
                     Spacer(modifier = Modifier.height(RitimoTheme.spacing.md))
                     Row(
@@ -515,6 +521,14 @@ private fun NutritionSection(
                             RitimoStatusBadge(text = "${activeDiet.fatsGrams}g GORDURA", type = BadgeType.NEUTRAL)
                         }
                     }
+                }
+
+                if (completedMealsList.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
+                    RitimoStatusBadge(
+                        text = "CONSUMIDO HOJE: ${consumedSummary.totalCaloriesKcal} / ${activeDiet.totalCalories ?: 0} KCAL • ${consumedSummary.proteinGrams}g P • ${consumedSummary.carbsGrams}g C • ${consumedSummary.fatGrams}g G",
+                        type = BadgeType.PRIMARY
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(RitimoTheme.spacing.lg))
