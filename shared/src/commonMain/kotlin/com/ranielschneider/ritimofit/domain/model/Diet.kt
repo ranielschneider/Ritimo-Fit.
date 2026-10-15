@@ -25,8 +25,14 @@ data class Meal(
 
 data class FoodItem(
     val id: String,
+    val foodId: String? = null,
     val name: String,
     val amount: String,
     val unit: String,
+    val caloriesKcal: Double = 0.0,
+    val proteinGrams: Double = 0.0,
+    val carbsGrams: Double = 0.0,
+    val fatGrams: Double = 0.0,
+    val isCustom: Boolean = false,
     val notes: String? = null
 )

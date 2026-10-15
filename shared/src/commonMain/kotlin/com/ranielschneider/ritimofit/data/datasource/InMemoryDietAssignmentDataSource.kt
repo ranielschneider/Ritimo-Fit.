@@ -7,7 +7,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
 class InMemoryDietAssignmentDataSource : DietAssignmentDataSource {
-    private val assignmentsState = MutableStateFlow<List<DietAssignment>>(emptyList())
+    private val assignmentsState = MutableStateFlow<List<DietAssignment>>(
+        listOf(
+            DietAssignment(
+                id = "dasgn_1",
+                studentId = "std_1",
+                dietId = "dt_hipertrofia"
+            )
+        )
+    )
 
     override fun observeAssignmentsForStudent(studentId: String): Flow<AppResult<List<DietAssignment>>> {
         return assignmentsState.map { list ->

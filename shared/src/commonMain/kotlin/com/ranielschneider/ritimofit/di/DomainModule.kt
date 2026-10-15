@@ -2,6 +2,7 @@ package com.ranielschneider.ritimofit.di
 
 import com.ranielschneider.ritimofit.domain.usecase.AssignDietToStudentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.AssignWorkoutToStudentUseCase
+import com.ranielschneider.ritimofit.domain.usecase.CompleteMealUseCase
 import com.ranielschneider.ritimofit.domain.usecase.CompleteWorkoutUseCase
 import com.ranielschneider.ritimofit.domain.usecase.DeleteDietUseCase
 import com.ranielschneider.ritimofit.domain.usecase.ForgotPasswordUseCase
@@ -10,6 +11,7 @@ import com.ranielschneider.ritimofit.domain.usecase.GetDietDetailUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetDietsForProfessorUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetExerciseCatalogUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetExerciseDetailUseCase
+import com.ranielschneider.ritimofit.domain.usecase.GetMealCompletionsForStudentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentDetailUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentDietAssignmentsUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentWorkoutAssignmentsUseCase
@@ -25,6 +27,8 @@ import com.ranielschneider.ritimofit.domain.usecase.RemoveDietAssignmentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.RemoveWorkoutAssignmentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.SaveDietUseCase
 import com.ranielschneider.ritimofit.domain.usecase.SaveWorkoutUseCase
+import com.ranielschneider.ritimofit.domain.usecase.SearchFoodsUseCase
+import com.ranielschneider.ritimofit.domain.usecase.UndoMealCompletionUseCase
 import com.ranielschneider.ritimofit.domain.usecase.UpdateWaterConsumptionUseCase
 import org.koin.dsl.module
 
@@ -52,6 +56,10 @@ val domainModule = module {
     factory { GetStudentDietAssignmentsUseCase(get(), get()) }
     factory { AssignDietToStudentUseCase(get()) }
     factory { RemoveDietAssignmentUseCase(get()) }
+    factory { CompleteMealUseCase(get(), get()) }
+    factory { UndoMealCompletionUseCase(get(), get()) }
+    factory { GetMealCompletionsForStudentUseCase(get()) }
+    factory { SearchFoodsUseCase(get()) }
     factory { LoginUseCase(get()) }
     factory { ForgotPasswordUseCase(get()) }
     factory { RegisterUserUseCase(get()) }

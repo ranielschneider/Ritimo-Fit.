@@ -3,30 +3,39 @@ package com.ranielschneider.ritimofit.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ranielschneider.ritimofit.core.result.AppResult
+import com.ranielschneider.ritimofit.domain.model.Diet
+import com.ranielschneider.ritimofit.domain.model.MealCompletion
 import com.ranielschneider.ritimofit.domain.model.User
 import com.ranielschneider.ritimofit.domain.model.UserRole
 import com.ranielschneider.ritimofit.domain.model.WaterTracking
 import com.ranielschneider.ritimofit.domain.model.Workout
 import com.ranielschneider.ritimofit.domain.model.WorkoutCompletion
 import com.ranielschneider.ritimofit.domain.repository.AuthRepository
+import com.ranielschneider.ritimofit.domain.usecase.CompleteMealUseCase
 import com.ranielschneider.ritimofit.domain.usecase.CompleteWorkoutUseCase
+import com.ranielschneider.ritimofit.domain.usecase.GetMealCompletionsForStudentUseCase
+import com.ranielschneider.ritimofit.domain.usecase.GetStudentDietAssignmentsUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentWorkoutAssignmentsUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetWaterTrackingUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetWorkoutCompletionsForStudentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetWorkoutDetailUseCase
+import com.ranielschneider.ritimofit.domain.usecase.UndoMealCompletionUseCase
 import com.ranielschneider.ritimofit.domain.usecase.UpdateWaterConsumptionUseCase
 import com.ranielschneider.ritimofit.presentation.base.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 data class StudentTodayData(
     val studentUser: User,
     val assignedWorkouts: List<Workout> = emptyList(),
     val completions: List<WorkoutCompletion> = emptyList(),
-    val waterTracking: WaterTracking = WaterTracking(studentId = "")
+    val waterTracking: WaterTracking = WaterTracking(studentId = ""),
+    val activeDiet: Diet? = null,
+    val mealCompletions: List<MealCompletion> = emptyList()
 )
 
 class StudentTodayViewModel(
@@ -36,7 +45,11 @@ class StudentTodayViewModel(
     private val completeWorkoutUseCase: CompleteWorkoutUseCase,
     private val getWorkoutCompletionsForStudentUseCase: GetWorkoutCompletionsForStudentUseCase,
     private val getWaterTrackingUseCase: GetWaterTrackingUseCase,
-    private val updateWaterConsumptionUseCase: UpdateWaterConsumptionUseCase
+    private val updateWaterConsumptionUseCase: UpdateWaterConsumptionUseCase,
+    private val getStudentDietAssignmentsUseCase: GetStudentDietAssignmentsUseCase,
+    private val completeMealUseCase: CompleteMealUseCase,
+    private val undoMealCompletionUseCase: UndoMealCompletionUseCase,
+    private val getMealCompletionsForStudentUseCase: GetMealCompletionsForStudentUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<StudentTodayData>>(UiState.Idle)
@@ -66,59 +79,29 @@ class StudentTodayViewModel(
                 }
             }
 
-            // Observe water tracking
-            launch {
-                getWaterTrackingUseCase(studentUser.id).collectLatest { waterResult ->
-                    val water = if (waterResult is AppResult.Success) waterResult.data else WaterTracking(studentId = studentUser.id)
-                    val currentSuccess = _uiState.value as? UiState.Success<StudentTodayData>
-                    if (currentSuccess != null) {
-                        _uiState.value = UiState.Success(
-                            currentSuccess.data.copy(waterTracking = water)
-                        )
-                    }
-                }
-            }
+            combine(
+                getStudentWorkoutAssignmentsUseCase(studentUser.id),
+                getWorkoutCompletionsForStudentUseCase.observeCompletions(studentUser.id),
+                getWaterTrackingUseCase(studentUser.id),
+                getStudentDietAssignmentsUseCase(studentUser.id),
+                getMealCompletionsForStudentUseCase.observeCompletions(studentUser.id)
+            ) { workoutsRes, completionsRes, waterRes, dietRes, mealCompletionsRes ->
+                val workouts = if (workoutsRes is AppResult.Success) workoutsRes.data.map { it.workout } else emptyList()
+                val completions = if (completionsRes is AppResult.Success) completionsRes.data else emptyList()
+                val water = if (waterRes is AppResult.Success) waterRes.data else WaterTracking(studentId = studentUser.id)
+                val activeDiet = if (dietRes is AppResult.Success) dietRes.data.firstOrNull()?.diet else null
+                val mealCompletions = if (mealCompletionsRes is AppResult.Success) mealCompletionsRes.data else emptyList()
 
-            // Observe completions
-            launch {
-                getWorkoutCompletionsForStudentUseCase.observeCompletions(studentUser.id).collectLatest { completionsResult ->
-                    val completions = if (completionsResult is AppResult.Success) completionsResult.data else emptyList()
-                    val currentSuccess = _uiState.value as? UiState.Success<StudentTodayData>
-                    if (currentSuccess != null) {
-                        _uiState.value = UiState.Success(
-                            currentSuccess.data.copy(completions = completions)
-                        )
-                    }
-                }
-            }
-
-            getStudentWorkoutAssignmentsUseCase(studentUser.id).collectLatest { result ->
-                when (result) {
-                    is AppResult.Success -> {
-                        val workoutsList = result.data.map { it.workout }
-                        val currentSuccess = _uiState.value as? UiState.Success<StudentTodayData>
-                        val currentCompletions = currentSuccess?.data?.completions ?: emptyList()
-                        val currentWater = currentSuccess?.data?.waterTracking ?: WaterTracking(studentId = studentUser.id)
-                        _uiState.value = UiState.Success(
-                            StudentTodayData(
-                                studentUser = studentUser,
-                                assignedWorkouts = workoutsList,
-                                completions = currentCompletions,
-                                waterTracking = currentWater
-                            )
-                        )
-                    }
-                    is AppResult.Error -> {
-                        _uiState.value = UiState.Success(
-                            StudentTodayData(
-                                studentUser = studentUser,
-                                assignedWorkouts = emptyList(),
-                                completions = emptyList(),
-                                waterTracking = WaterTracking(studentId = studentUser.id)
-                            )
-                        )
-                    }
-                }
+                StudentTodayData(
+                    studentUser = studentUser,
+                    assignedWorkouts = workouts,
+                    completions = completions,
+                    waterTracking = water,
+                    activeDiet = activeDiet,
+                    mealCompletions = mealCompletions
+                )
+            }.collectLatest { todayData ->
+                _uiState.value = UiState.Success(todayData)
             }
         }
     }
@@ -127,6 +110,18 @@ class StudentTodayViewModel(
         val currentState = (_uiState.value as? UiState.Success<StudentTodayData>)?.data ?: return
         viewModelScope.launch {
             completeWorkoutUseCase(workoutId, currentState.completions)
+        }
+    }
+
+    fun completeMeal(dietId: String, mealId: String) {
+        viewModelScope.launch {
+            completeMealUseCase(dietId, mealId)
+        }
+    }
+
+    fun undoMealCompletion(dietId: String, mealId: String) {
+        viewModelScope.launch {
+            undoMealCompletionUseCase(dietId, mealId)
         }
     }
 

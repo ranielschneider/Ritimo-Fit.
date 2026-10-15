@@ -38,8 +38,6 @@ import com.ranielschneider.ritimofit.core.design.icons.RitimoIcons
 import com.ranielschneider.ritimofit.core.design.theme.RitimoTheme
 import com.ranielschneider.ritimofit.domain.model.User
 import com.ranielschneider.ritimofit.domain.model.WaterTracking
-import com.ranielschneider.ritimofit.domain.model.Workout
-import com.ranielschneider.ritimofit.domain.model.WorkoutCompletion
 import com.ranielschneider.ritimofit.presentation.base.UiState
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentTodayData
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentTodayViewModel
@@ -109,8 +107,12 @@ fun StudentTodayScreen(
 
                     Spacer(modifier = Modifier.height(RitimoTheme.spacing.lg))
 
-                    // 5. Alimentação Brasileira
-                    NutritionSection()
+                    // 5. Alimentação da Dieta Ativa com Conclusão de Refeições
+                    NutritionSection(
+                        data = data,
+                        onCompleteMeal = viewModel::completeMeal,
+                        onUndoMealCompletion = viewModel::undoMealCompletion
+                    )
 
                     Spacer(modifier = Modifier.height(RitimoTheme.spacing.lg))
 
@@ -172,6 +174,13 @@ private fun StudentTodayHeader(studentUser: User) {
 private fun DailyProgressSection(data: StudentTodayData) {
     val totalWorkouts = data.assignedWorkouts.size
     val completedWorkouts = data.completions.size.coerceAtMost(totalWorkouts)
+
+    val activeDiet = data.activeDiet
+    val totalMeals = activeDiet?.meals?.size ?: 0
+    val completedMeals = if (activeDiet != null) {
+        data.mealCompletions.count { it.dietId == activeDiet.id }
+    } else 0
+
     val waterGoalReached = data.waterTracking.consumedMl >= data.waterTracking.dailyGoalMl
 
     var totalGoals = 0
@@ -180,6 +189,11 @@ private fun DailyProgressSection(data: StudentTodayData) {
     if (totalWorkouts > 0) {
         totalGoals += totalWorkouts
         completedGoals += completedWorkouts
+    }
+
+    if (totalMeals > 0) {
+        totalGoals += totalMeals
+        completedGoals += completedMeals
     }
 
     totalGoals += 1
@@ -433,32 +447,178 @@ private fun HydrationSection(
 }
 
 @Composable
-private fun NutritionSection() {
+private fun NutritionSection(
+    data: StudentTodayData,
+    onCompleteMeal: (dietId: String, mealId: String) -> Unit,
+    onUndoMealCompletion: (dietId: String, mealId: String) -> Unit
+) {
+    val activeDiet = data.activeDiet
+
     Text(
-        text = "ALIMENTAÇÃO",
+        text = "ALIMENTAÇÃO DE HOJE",
         style = RitimoTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
         color = RitimoTheme.colors.onBackground
     )
 
     Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
 
-    RitimoGlassCard(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(RitimoTheme.spacing.xs)
-        ) {
-            Text(
-                text = "Sua alimentação ainda não foi configurada",
-                style = RitimoTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = RitimoTheme.colors.onSurface
-            )
-            Spacer(modifier = Modifier.height(RitimoTheme.spacing.xxs))
-            Text(
-                text = "Seu professor ainda não cadastrou seu plano alimentar com as refeições (Café da manhã, Almoço, Lanche, Jantar e Ceia).",
-                style = RitimoTheme.typography.bodyMedium,
-                color = RitimoTheme.colors.onSurfaceVariant
-            )
+    if (activeDiet != null) {
+        RitimoGlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(RitimoTheme.spacing.xs)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = activeDiet.title,
+                        style = RitimoTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = RitimoTheme.colors.onSurface
+                    )
+
+                    RitimoStatusBadge(
+                        text = "${activeDiet.meals.size} REFEIÇÕES",
+                        type = BadgeType.PRIMARY
+                    )
+                }
+
+                if (!activeDiet.description.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
+                    Text(
+                        text = activeDiet.description,
+                        style = RitimoTheme.typography.bodyMedium,
+                        color = RitimoTheme.colors.onSurfaceVariant
+                    )
+                }
+
+                // Macros summary badges
+                if (activeDiet.totalCalories != null || activeDiet.proteinGrams != null || activeDiet.carbsGrams != null || activeDiet.fatsGrams != null) {
+                    Spacer(modifier = Modifier.height(RitimoTheme.spacing.md))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (activeDiet.totalCalories != null && activeDiet.totalCalories > 0) {
+                            RitimoStatusBadge(text = "${activeDiet.totalCalories} KCAL", type = BadgeType.PRIMARY)
+                        }
+                        if (activeDiet.proteinGrams != null && activeDiet.proteinGrams > 0) {
+                            RitimoStatusBadge(text = "${activeDiet.proteinGrams}g PROTEÍNA", type = BadgeType.NEUTRAL)
+                        }
+                        if (activeDiet.carbsGrams != null && activeDiet.carbsGrams > 0) {
+                            RitimoStatusBadge(text = "${activeDiet.carbsGrams}g CARBS", type = BadgeType.NEUTRAL)
+                        }
+                        if (activeDiet.fatsGrams != null && activeDiet.fatsGrams > 0) {
+                            RitimoStatusBadge(text = "${activeDiet.fatsGrams}g GORDURA", type = BadgeType.NEUTRAL)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(RitimoTheme.spacing.lg))
+
+                // Render meals, food items, and completion buttons
+                Column(verticalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.md)) {
+                    activeDiet.meals.forEach { meal ->
+                        val isMealCompleted = data.mealCompletions.any { it.dietId == activeDiet.id && it.mealId == meal.id }
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RitimoTheme.shapes.medium)
+                                .background(RitimoTheme.colors.surfaceVariant.copy(alpha = 0.5f))
+                                .padding(RitimoTheme.spacing.sm)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = meal.name,
+                                    style = RitimoTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = RitimoTheme.colors.onSurface
+                                )
+
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.xs),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (!meal.time.isNullOrBlank()) {
+                                        RitimoStatusBadge(text = meal.time, type = BadgeType.NEUTRAL)
+                                    }
+
+                                    RitimoStatusBadge(
+                                        text = if (isMealCompleted) "CONCLUÍDA" else "PENDENTE",
+                                        type = if (isMealCompleted) BadgeType.PRIMARY else BadgeType.NEUTRAL
+                                    )
+                                }
+                            }
+
+                            if (meal.foods.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
+                                Column(verticalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.xxs)) {
+                                    meal.foods.forEach { food ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = "• ${food.name}",
+                                                style = RitimoTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                                color = RitimoTheme.colors.onSurface
+                                            )
+                                            Text(
+                                                text = "${food.amount} ${food.unit}",
+                                                style = RitimoTheme.typography.bodyMedium,
+                                                color = RitimoTheme.colors.primary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(RitimoTheme.spacing.sm))
+
+                            if (isMealCompleted) {
+                                RitimoSecondaryButton(
+                                    text = "Desfazer conclusão",
+                                    onClick = { onUndoMealCompletion(activeDiet.id, meal.id) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            } else {
+                                RitimoSecondaryButton(
+                                    text = "✓ Marcar como concluída",
+                                    onClick = { onCompleteMeal(activeDiet.id, meal.id) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        RitimoGlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(RitimoTheme.spacing.xs)
+            ) {
+                Text(
+                    text = "Sua alimentação ainda não foi configurada",
+                    style = RitimoTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = RitimoTheme.colors.onSurface
+                )
+                Spacer(modifier = Modifier.height(RitimoTheme.spacing.xxs))
+                Text(
+                    text = "Seu professor ainda não cadastrou seu plano alimentar.",
+                    style = RitimoTheme.typography.bodyMedium,
+                    color = RitimoTheme.colors.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -584,6 +744,13 @@ private fun ProfessorMessageSection() {
 private fun DailySummarySection(data: StudentTodayData) {
     val totalWorkouts = data.assignedWorkouts.size
     val completedWorkouts = data.completions.size.coerceAtMost(totalWorkouts)
+
+    val activeDiet = data.activeDiet
+    val totalMeals = activeDiet?.meals?.size ?: 0
+    val completedMeals = if (activeDiet != null) {
+        data.mealCompletions.count { it.dietId == activeDiet.id }
+    } else 0
+
     val waterGoalReached = data.waterTracking.consumedMl >= data.waterTracking.dailyGoalMl
 
     var totalGoals = 0
@@ -592,6 +759,11 @@ private fun DailySummarySection(data: StudentTodayData) {
     if (totalWorkouts > 0) {
         totalGoals += totalWorkouts
         completedGoals += completedWorkouts
+    }
+
+    if (totalMeals > 0) {
+        totalGoals += totalMeals
+        completedGoals += completedMeals
     }
 
     totalGoals += 1

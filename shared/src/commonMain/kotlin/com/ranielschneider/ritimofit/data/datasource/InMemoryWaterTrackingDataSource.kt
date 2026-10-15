@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.map
 class InMemoryWaterTrackingDataSource : WaterTrackingDataSource {
     private val waterMapState = MutableStateFlow<Map<String, WaterTracking>>(
         mapOf(
-            "std_1" to WaterTracking(studentId = "std_1", dailyGoalMl = 2500, consumedMl = 1250),
-            "std_2" to WaterTracking(studentId = "std_2", dailyGoalMl = 2000, consumedMl = 500)
+            "std_1" to WaterTracking(studentId = "std_1", dailyGoalMl = 2500, consumedMl = 0),
+            "std_2" to WaterTracking(studentId = "std_2", dailyGoalMl = 2000, consumedMl = 0)
         )
     )
 

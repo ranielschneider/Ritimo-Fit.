@@ -70,18 +70,22 @@ fun RitimoWaterBottle(
             )
 
             // 2. Draw Bottle Outline Path
+            val bottleTopY = capHeight + 4.dp.toPx()
+            val bottleBottomY = bodyTop + bodyHeight + 8.dp.toPx()
+            val totalBottleHeight = bottleBottomY - bottleTopY
+
             val bottlePath = Path().apply {
-                moveTo(neckLeft, capHeight + 4.dp.toPx())
-                lineTo(neckLeft + neckWidth, capHeight + 4.dp.toPx())
+                moveTo(neckLeft, bottleTopY)
+                lineTo(neckLeft + neckWidth, bottleTopY)
                 lineTo(bodyLeft + bodyWidth, bodyTop)
                 lineTo(bodyLeft + bodyWidth, bodyTop + bodyHeight)
                 quadraticTo(
-                    bodyLeft + bodyWidth, bodyTop + bodyHeight + 8.dp.toPx(),
-                    bodyLeft + bodyWidth - 12.dp.toPx(), bodyTop + bodyHeight + 8.dp.toPx()
+                    bodyLeft + bodyWidth, bottleBottomY,
+                    bodyLeft + bodyWidth - 12.dp.toPx(), bottleBottomY
                 )
-                lineTo(bodyLeft + 12.dp.toPx(), bodyTop + bodyHeight + 8.dp.toPx())
+                lineTo(bodyLeft + 12.dp.toPx(), bottleBottomY)
                 quadraticTo(
-                    bodyLeft, bodyTop + bodyHeight + 8.dp.toPx(),
+                    bodyLeft, bottleBottomY,
                     bodyLeft, bodyTop + bodyHeight
                 )
                 lineTo(bodyLeft, bodyTop)
@@ -94,9 +98,9 @@ fun RitimoWaterBottle(
                 color = Color(0xFF1E222A).copy(alpha = 0.8f)
             )
 
-            // 3. Draw Water Liquid Fill (Remaining level)
-            val fillHeightPx = bodyHeight * animatedFillFraction
-            val liquidTop = bodyTop + (bodyHeight - fillHeightPx)
+            // 3. Draw Water Liquid Fill (Remaining level from top of neck to bottom)
+            val liquidTop = bottleTopY + (totalBottleHeight * (1f - animatedFillFraction))
+            val fillHeightPx = bottleBottomY - liquidTop
 
             if (fillHeightPx > 0) {
                 val waterBrush = Brush.verticalGradient(
@@ -110,7 +114,7 @@ fun RitimoWaterBottle(
                     drawRect(
                         brush = waterBrush,
                         topLeft = Offset(0f, liquidTop),
-                        size = Size(width, fillHeightPx + 16.dp.toPx())
+                        size = Size(width, fillHeightPx)
                     )
                 }
             }

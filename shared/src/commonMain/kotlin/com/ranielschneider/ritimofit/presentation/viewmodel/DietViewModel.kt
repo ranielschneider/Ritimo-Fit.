@@ -3,13 +3,17 @@ package com.ranielschneider.ritimofit.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ranielschneider.ritimofit.core.result.AppResult
+import com.ranielschneider.ritimofit.domain.calculator.DietNutritionalSummary
+import com.ranielschneider.ritimofit.domain.calculator.NutritionalCalculator
 import com.ranielschneider.ritimofit.domain.model.Diet
+import com.ranielschneider.ritimofit.domain.model.Food
 import com.ranielschneider.ritimofit.domain.model.FoodItem
 import com.ranielschneider.ritimofit.domain.model.Meal
 import com.ranielschneider.ritimofit.domain.usecase.DeleteDietUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetDietDetailUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetDietsForProfessorUseCase
 import com.ranielschneider.ritimofit.domain.usecase.SaveDietUseCase
+import com.ranielschneider.ritimofit.domain.usecase.SearchFoodsUseCase
 import com.ranielschneider.ritimofit.presentation.base.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +25,8 @@ class DietViewModel(
     private val getDietsForProfessorUseCase: GetDietsForProfessorUseCase,
     private val saveDietUseCase: SaveDietUseCase,
     private val getDietDetailUseCase: GetDietDetailUseCase,
-    private val deleteDietUseCase: DeleteDietUseCase
+    private val deleteDietUseCase: DeleteDietUseCase,
+    private val searchFoodsUseCase: SearchFoodsUseCase
 ) : ViewModel() {
 
     // 1. Diet Library State
@@ -59,8 +64,16 @@ class DietViewModel(
     private val _saveError = MutableStateFlow<String?>(null)
     val saveError: StateFlow<String?> = _saveError.asStateFlow()
 
+    // 3. Food Catalog Search State
+    private val _foodSearchQuery = MutableStateFlow("")
+    val foodSearchQuery: StateFlow<String> = _foodSearchQuery.asStateFlow()
+
+    private val _foodSearchResults = MutableStateFlow<UiState<List<Food>>>(UiState.Idle)
+    val foodSearchResults: StateFlow<UiState<List<Food>>> = _foodSearchResults.asStateFlow()
+
     init {
         loadDiets()
+        searchCatalogFoods("")
     }
 
     fun loadDiets() {
@@ -68,6 +81,19 @@ class DietViewModel(
             _dietsUiState.value = UiState.Loading
             getDietsForProfessorUseCase().collectLatest { result ->
                 _dietsUiState.value = when (result) {
+                    is AppResult.Success -> UiState.Success(result.data)
+                    is AppResult.Error -> UiState.Error(result.error)
+                }
+            }
+        }
+    }
+
+    fun searchCatalogFoods(query: String) {
+        _foodSearchQuery.value = query
+        viewModelScope.launch {
+            _foodSearchResults.value = UiState.Loading
+            searchFoodsUseCase(query).collectLatest { result ->
+                _foodSearchResults.value = when (result) {
                     is AppResult.Success -> UiState.Success(result.data)
                     is AppResult.Error -> UiState.Error(result.error)
                 }
@@ -86,7 +112,6 @@ class DietViewModel(
         _saveError.value = null
         _isSaving.value = false
 
-        // Pre-populate 5 standard Brazilian meals
         _meals.value = listOf(
             Meal(id = "m_1", name = "Café da manhã", time = "08:00", order = 0),
             Meal(id = "m_2", name = "Almoço", time = "12:30", order = 1),
@@ -145,6 +170,10 @@ class DietViewModel(
         _fatsGrams.value = fats
     }
 
+    fun getCalculatedDietSummary(): DietNutritionalSummary {
+        return NutritionalCalculator.sumDietMacros(_meals.value)
+    }
+
     fun addMeal(name: String, time: String?) {
         val currentList = _meals.value.toMutableList()
         val nextOrder = currentList.size
@@ -166,7 +195,40 @@ class DietViewModel(
         }
     }
 
-    fun addFoodToMeal(mealIndex: Int, foodName: String, amount: String, unit: String, notes: String?) {
+    fun addFoodPortionToMeal(
+        mealIndex: Int,
+        food: Food,
+        amountValue: Double,
+        unit: String,
+        notes: String? = null
+    ) {
+        val currentList = _meals.value.toMutableList()
+        if (mealIndex in currentList.indices) {
+            val meal = currentList[mealIndex]
+            val updatedFoods = meal.foods.toMutableList()
+            val newFoodItem = NutritionalCalculator.calculatePortion(
+                food = food,
+                amountValue = amountValue,
+                unit = unit,
+                notes = notes
+            )
+            updatedFoods.add(newFoodItem)
+            currentList[mealIndex] = meal.copy(foods = updatedFoods)
+            _meals.value = currentList
+        }
+    }
+
+    fun addCustomFoodToMeal(
+        mealIndex: Int,
+        foodName: String,
+        amount: String,
+        unit: String,
+        caloriesKcal: Double,
+        proteinGrams: Double,
+        carbsGrams: Double,
+        fatGrams: Double,
+        notes: String?
+    ) {
         val currentList = _meals.value.toMutableList()
         if (mealIndex in currentList.indices) {
             val meal = currentList[mealIndex]
@@ -176,6 +238,11 @@ class DietViewModel(
                 name = foodName.trim(),
                 amount = amount.trim(),
                 unit = unit.trim(),
+                caloriesKcal = caloriesKcal,
+                proteinGrams = proteinGrams,
+                carbsGrams = carbsGrams,
+                fatGrams = fatGrams,
+                isCustom = true,
                 notes = notes?.trim()?.takeIf { it.isNotEmpty() }
             )
             updatedFoods.add(newFood)
