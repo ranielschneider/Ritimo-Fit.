@@ -125,11 +125,7 @@ fun StudentAppShell(
                     StudentDietScreen()
                 }
                 is StudentRoute.Evolution -> {
-                    RoutePlaceholderScreen(
-                        badgeText = "ÁREA DO ALUNO",
-                        title = "Evolução Corporal",
-                        description = "Acompanhe seu progresso de peso, medidas e fotos de evolução física."
-                    )
+                    StudentEvolutionScreen()
                 }
                 is StudentRoute.Profile -> {
                     RoutePlaceholderScreen(

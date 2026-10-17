@@ -29,7 +29,9 @@ class GetWorkoutCompletionsForStudentUseCase(
                                         completionId = completion.id,
                                         studentId = studentId,
                                         workout = workoutResult.data,
-                                        completedAtEpochMs = completion.completedAtEpochMs
+                                        startedAtEpochMs = completion.startedAtEpochMs,
+                                        completedAtEpochMs = completion.completedAtEpochMs,
+                                        durationSeconds = completion.durationSeconds
                                     )
                                 )
                             }

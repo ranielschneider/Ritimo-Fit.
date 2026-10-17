@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 data class StudentTodayData(
     val studentUser: User,
@@ -36,6 +37,11 @@ data class StudentTodayData(
     val waterTracking: WaterTracking = WaterTracking(studentId = ""),
     val activeDiet: Diet? = null,
     val mealCompletions: List<MealCompletion> = emptyList()
+)
+
+data class WorkoutSessionConflict(
+    val activeWorkoutId: String,
+    val newWorkoutId: String
 )
 
 class StudentTodayViewModel(
@@ -57,6 +63,17 @@ class StudentTodayViewModel(
 
     private val _readOnlyWorkoutState = MutableStateFlow<UiState<Workout>>(UiState.Idle)
     val readOnlyWorkoutState: StateFlow<UiState<Workout>> = _readOnlyWorkoutState.asStateFlow()
+
+    // Workout execution session timer
+    private val _activeWorkoutSessionId = MutableStateFlow<String?>(null)
+    val activeWorkoutSessionId: StateFlow<String?> = _activeWorkoutSessionId.asStateFlow()
+
+    private val _sessionStartTimestamp = MutableStateFlow<Long>(0L)
+    val sessionStartTimestamp: StateFlow<Long> = _sessionStartTimestamp.asStateFlow()
+
+    // Conflict detection
+    private val _sessionConflict = MutableStateFlow<WorkoutSessionConflict?>(null)
+    val sessionConflict: StateFlow<WorkoutSessionConflict?> = _sessionConflict.asStateFlow()
 
     init {
         loadTodayContent()
@@ -106,10 +123,56 @@ class StudentTodayViewModel(
         }
     }
 
-    fun completeWorkout(workoutId: String) {
-        val currentState = (_uiState.value as? UiState.Success<StudentTodayData>)?.data ?: return
+    fun startWorkoutSession(workoutId: String) {
+        val currentActive = _activeWorkoutSessionId.value
+        if (currentActive != null && currentActive != workoutId) {
+            _sessionConflict.value = WorkoutSessionConflict(
+                activeWorkoutId = currentActive,
+                newWorkoutId = workoutId
+            )
+            return
+        }
+        if (currentActive == null) {
+            _activeWorkoutSessionId.value = workoutId
+            _sessionStartTimestamp.value = Clock.System.now().toEpochMilliseconds()
+        }
+    }
+
+    fun dismissSessionConflict() {
+        _sessionConflict.value = null
+    }
+
+    fun resolveConflictFinishAndStartNew(onSuccess: () -> Unit = {}) {
+        val conflict = _sessionConflict.value ?: return
+        val currentActive = conflict.activeWorkoutId
+        val newWorkoutId = conflict.newWorkoutId
+        val completedAt = Clock.System.now().toEpochMilliseconds()
+        val startMs = _sessionStartTimestamp.value.takeIf { it > 0 } ?: (completedAt - 60000L)
+
         viewModelScope.launch {
-            completeWorkoutUseCase(workoutId, currentState.completions)
+            completeWorkoutUseCase(currentActive, startMs, completedAt)
+            _activeWorkoutSessionId.value = newWorkoutId
+            _sessionStartTimestamp.value = Clock.System.now().toEpochMilliseconds()
+            _sessionConflict.value = null
+            onSuccess()
+        }
+    }
+
+    fun completeActiveWorkoutSession(workoutId: String, completedAtMs: Long = Clock.System.now().toEpochMilliseconds(), onSuccess: () -> Unit = {}) {
+        val startMs = _sessionStartTimestamp.value.takeIf { it > 0 } ?: (completedAtMs - 60000L)
+        viewModelScope.launch {
+            completeWorkoutUseCase(workoutId, startMs, completedAtMs)
+            _activeWorkoutSessionId.value = null
+            _sessionStartTimestamp.value = 0L
+            onSuccess()
+        }
+    }
+
+    fun completeWorkout(workoutId: String) {
+        val endMs = Clock.System.now().toEpochMilliseconds()
+        val startMs = endMs - 60000L
+        viewModelScope.launch {
+            completeWorkoutUseCase(workoutId, startMs, endMs)
         }
     }
 

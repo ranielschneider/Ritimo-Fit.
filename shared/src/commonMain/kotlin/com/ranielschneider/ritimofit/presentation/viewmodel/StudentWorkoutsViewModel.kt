@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 class StudentWorkoutsViewModel(
     private val authRepository: AuthRepository,
@@ -90,8 +91,10 @@ class StudentWorkoutsViewModel(
     }
 
     fun completeWorkout(workoutId: String) {
+        val endMs = Clock.System.now().toEpochMilliseconds()
+        val startMs = endMs - 60000L
         viewModelScope.launch {
-            completeWorkoutUseCase(workoutId, _completionsState.value)
+            completeWorkoutUseCase(workoutId, startMs, endMs)
         }
     }
 

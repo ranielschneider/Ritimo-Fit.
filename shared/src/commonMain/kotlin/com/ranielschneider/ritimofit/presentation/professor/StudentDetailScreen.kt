@@ -46,6 +46,7 @@ import com.ranielschneider.ritimofit.presentation.base.UiState
 import com.ranielschneider.ritimofit.presentation.navigation.StudentDetailTab
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentDetailViewModel
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentDietAssignmentViewModel
+import com.ranielschneider.ritimofit.presentation.viewmodel.StudentEvolutionViewModel
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentWorkoutAssignmentViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -127,6 +128,9 @@ fun StudentDetailScreen(
                                 onNavigateToAssignDietPicker = onNavigateToAssignDietPicker,
                                 onViewDietDetail = onViewDietDetail
                             )
+                        }
+                        StudentDetailTab.Evolution -> {
+                            StudentEvolutionTabContent(studentId = studentId)
                         }
                         else -> {
                             StudentSubTabPlaceholder(tab = selectedTab)
@@ -514,6 +518,163 @@ private fun StudentDietTabContent(
             }
             else -> {}
         }
+    }
+}
+
+@Composable
+private fun StudentEvolutionTabContent(
+    studentId: String,
+    viewModel: StudentEvolutionViewModel = koinViewModel()
+) {
+    LaunchedEffect(studentId) {
+        viewModel.loadStudentEvolution(studentId)
+    }
+
+    val evolutionState by viewModel.evolutionUiState.collectAsState()
+    val completedWorkoutsState by viewModel.completedWorkoutsState.collectAsState()
+
+    when (val state = evolutionState) {
+        is UiState.Loading -> {
+            RitimoLoadingState(
+                message = "Carregando evolução do aluno...",
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        is UiState.Error -> {
+            RitimoErrorState(
+                title = "Erro ao carregar evolução",
+                message = "Não foi possível carregar a evolução deste aluno.",
+                onRetry = { viewModel.loadStudentEvolution(studentId) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        is UiState.Success -> {
+            val summary = state.data
+
+            Column(verticalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.lg)) {
+                // 1. Resumo de Peso
+                Text(
+                    text = "Resumo de Peso",
+                    style = RitimoTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = RitimoTheme.colors.onBackground
+                )
+
+                RitimoGlassCard(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(text = "Peso Atual", style = RitimoTheme.typography.bodySmall, color = RitimoTheme.colors.onSurfaceVariant)
+                            Text(text = summary.latestWeightKg?.let { "$it kg" } ?: "—", style = RitimoTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = RitimoTheme.colors.onSurface)
+                        }
+
+                        Column {
+                            Text(text = "Peso Inicial", style = RitimoTheme.typography.bodySmall, color = RitimoTheme.colors.onSurfaceVariant)
+                            Text(text = summary.initialWeightKg?.let { "$it kg" } ?: "—", style = RitimoTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = RitimoTheme.colors.onSurface)
+                        }
+
+                        Column {
+                            Text(text = "Diferença", style = RitimoTheme.typography.bodySmall, color = RitimoTheme.colors.onSurfaceVariant)
+                            val diff = summary.weightDifferenceKg
+                            val diffStr = when {
+                                diff == null -> "—"
+                                diff > 0 -> "+$diff kg"
+                                else -> "$diff kg"
+                            }
+                            RitimoStatusBadge(text = diffStr, type = if (diff != null && diff <= 0) BadgeType.PRIMARY else BadgeType.NEUTRAL)
+                        }
+                    }
+                }
+
+                // 2. Histórico de Medidas
+                Text(
+                    text = "Medidas Corporais (${summary.measurementRecords.size})",
+                    style = RitimoTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = RitimoTheme.colors.onBackground
+                )
+
+                if (summary.measurementRecords.isEmpty()) {
+                    RitimoEmptyState(
+                        title = "Sem medidas registradas",
+                        description = "Este aluno ainda não possui registros de medidas corporais.",
+                        icon = RitimoIcons.Evolution,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.md)) {
+                        summary.measurementRecords.forEach { record ->
+                            RitimoGlassCard(modifier = Modifier.fillMaxWidth()) {
+                                Column {
+                                    if (!record.notes.isNullOrBlank()) {
+                                        Text(text = record.notes, style = RitimoTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = RitimoTheme.colors.onSurface)
+                                        Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.xs)) {
+                                        record.waistCm?.let { RitimoStatusBadge(text = "Cintura: ${it}cm", type = BadgeType.PRIMARY) }
+                                        record.abdomenCm?.let { RitimoStatusBadge(text = "Abdómen: ${it}cm", type = BadgeType.NEUTRAL) }
+                                        record.chestCm?.let { RitimoStatusBadge(text = "Peito: ${it}cm", type = BadgeType.NEUTRAL) }
+                                    }
+                                    Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.xs)) {
+                                        record.armCm?.let { RitimoStatusBadge(text = "Braço: ${it}cm", type = BadgeType.NEUTRAL) }
+                                        record.thighCm?.let { RitimoStatusBadge(text = "Coxa: ${it}cm", type = BadgeType.NEUTRAL) }
+                                        record.hipCm?.let { RitimoStatusBadge(text = "Anca: ${it}cm", type = BadgeType.NEUTRAL) }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 3. Histórico de Treinos Executados
+                Text(
+                    text = "Histórico de Treinos Executados",
+                    style = RitimoTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = RitimoTheme.colors.onBackground
+                )
+
+                when (completedWorkoutsState) {
+                    is UiState.Success -> {
+                        val workoutsList = (completedWorkoutsState as UiState.Success).data
+                        if (workoutsList.isEmpty()) {
+                            RitimoEmptyState(
+                                title = "Nenhum treino concluído",
+                                description = "Os treinos concluídos deste aluno aparecerão aqui.",
+                                icon = RitimoIcons.Workouts,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.md)) {
+                                workoutsList.forEach { details ->
+                                    val dur = details.durationSeconds
+                                    val min = dur / 60
+                                    val sec = dur % 60
+                                    val durStr = if (min > 0) "${min}m ${sec}s" else "${sec}s"
+
+                                    RitimoGlassCard(modifier = Modifier.fillMaxWidth()) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(text = details.workout.title, style = RitimoTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = RitimoTheme.colors.onSurface)
+                                                Text(text = "Duração: $durStr", style = RitimoTheme.typography.bodyMedium, color = RitimoTheme.colors.primary)
+                                            }
+                                            RitimoStatusBadge(text = "CONCLUÍDO", type = BadgeType.PRIMARY)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else -> {}
+                }
+            }
+        }
+        else -> {}
     }
 }
 

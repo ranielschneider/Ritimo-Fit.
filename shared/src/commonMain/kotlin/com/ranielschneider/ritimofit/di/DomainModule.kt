@@ -1,10 +1,13 @@
 package com.ranielschneider.ritimofit.di
 
+import com.ranielschneider.ritimofit.domain.usecase.AddBodyMeasurementUseCase
+import com.ranielschneider.ritimofit.domain.usecase.AddWeightRecordUseCase
 import com.ranielschneider.ritimofit.domain.usecase.AssignDietToStudentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.AssignWorkoutToStudentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.CompleteMealUseCase
 import com.ranielschneider.ritimofit.domain.usecase.CompleteWorkoutUseCase
 import com.ranielschneider.ritimofit.domain.usecase.DeleteDietUseCase
+import com.ranielschneider.ritimofit.domain.usecase.DeleteWeightRecordUseCase
 import com.ranielschneider.ritimofit.domain.usecase.ForgotPasswordUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetCurrentUserUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetDietDetailUseCase
@@ -14,6 +17,7 @@ import com.ranielschneider.ritimofit.domain.usecase.GetExerciseDetailUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetMealCompletionsForStudentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentDetailUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentDietAssignmentsUseCase
+import com.ranielschneider.ritimofit.domain.usecase.GetStudentEvolutionUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentWorkoutAssignmentsUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentWorkoutsUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentsForProfessorUseCase
@@ -60,6 +64,10 @@ val domainModule = module {
     factory { UndoMealCompletionUseCase(get(), get()) }
     factory { GetMealCompletionsForStudentUseCase(get()) }
     factory { SearchFoodsUseCase(get()) }
+    factory { GetStudentEvolutionUseCase(get()) }
+    factory { AddWeightRecordUseCase(get()) }
+    factory { DeleteWeightRecordUseCase(get()) }
+    factory { AddBodyMeasurementUseCase(get()) }
     factory { LoginUseCase(get()) }
     factory { ForgotPasswordUseCase(get()) }
     factory { RegisterUserUseCase(get()) }

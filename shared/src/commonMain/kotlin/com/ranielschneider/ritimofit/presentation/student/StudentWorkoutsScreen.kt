@@ -272,6 +272,11 @@ fun StudentWorkoutsScreen(
                                 ) {
                                     completedList.forEach { details ->
                                         val workout = details.workout
+                                        val durSec = details.durationSeconds
+                                        val min = durSec / 60
+                                        val sec = durSec % 60
+                                        val durStr = if (min > 0) "${min}m ${sec}s" else "${sec}s"
+
                                         RitimoGlassCard(modifier = Modifier.fillMaxWidth()) {
                                             Column(
                                                 modifier = Modifier
@@ -297,10 +302,20 @@ fun StudentWorkoutsScreen(
 
                                                 Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
 
-                                                RitimoStatusBadge(
-                                                    text = "${workout.exercises.size} EXERCÍCIOS CONCLUÍDOS",
-                                                    type = BadgeType.NEUTRAL
-                                                )
+                                                Row(
+                                                    horizontalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.xs),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    RitimoStatusBadge(
+                                                        text = "${workout.exercises.size} EXERCÍCIOS",
+                                                        type = BadgeType.NEUTRAL
+                                                    )
+
+                                                    RitimoStatusBadge(
+                                                        text = "DURAÇÃO: $durStr",
+                                                        type = BadgeType.PRIMARY
+                                                    )
+                                                }
 
                                                 if (!workout.description.isNullOrBlank()) {
                                                     Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
