@@ -46,6 +46,7 @@ import com.ranielschneider.ritimofit.presentation.base.UiState
 import com.ranielschneider.ritimofit.presentation.navigation.StudentDetailTab
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentDetailViewModel
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentDietAssignmentViewModel
+import com.ranielschneider.ritimofit.presentation.viewmodel.StudentDocumentViewModel
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentEvolutionViewModel
 import com.ranielschneider.ritimofit.presentation.viewmodel.StudentWorkoutAssignmentViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -131,6 +132,9 @@ fun StudentDetailScreen(
                         }
                         StudentDetailTab.Evolution -> {
                             StudentEvolutionTabContent(studentId = studentId)
+                        }
+                        StudentDetailTab.Exams, StudentDetailTab.Documents -> {
+                            StudentDocumentsTabContent(studentId = studentId)
                         }
                         else -> {
                             StudentSubTabPlaceholder(tab = selectedTab)
@@ -671,6 +675,122 @@ private fun StudentEvolutionTabContent(
                         }
                     }
                     else -> {}
+                }
+            }
+        }
+        else -> {}
+    }
+}
+
+@Composable
+private fun StudentDocumentsTabContent(
+    studentId: String,
+    viewModel: StudentDocumentViewModel = koinViewModel()
+) {
+    LaunchedEffect(studentId) {
+        viewModel.loadStudentDocuments(studentId)
+    }
+
+    val docsState by viewModel.documentsUiState.collectAsState()
+
+    when (val state = docsState) {
+        is UiState.Loading -> {
+            RitimoLoadingState(
+                message = "Carregando exames e documentos...",
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        is UiState.Error -> {
+            RitimoErrorState(
+                title = "Erro ao carregar documentos",
+                message = "Não foi possível carregar os exames deste aluno.",
+                onRetry = { viewModel.loadStudentDocuments(studentId) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        is UiState.Success -> {
+            val docs = state.data
+
+            Column(verticalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.lg)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Exames e Documentos (${docs.size})",
+                            style = RitimoTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = RitimoTheme.colors.onBackground
+                        )
+                        Spacer(modifier = Modifier.height(RitimoTheme.spacing.xxs))
+                        Text(
+                            text = "Análises clínicas, laudos e avaliações do aluno",
+                            style = RitimoTheme.typography.bodyMedium,
+                            color = RitimoTheme.colors.onSurfaceVariant
+                        )
+                    }
+                }
+
+                if (docs.isEmpty()) {
+                    RitimoEmptyState(
+                        title = "Nenhum documento anexado",
+                        description = "Os exames e laudos anexados pelo aluno aparecerão aqui.",
+                        icon = RitimoIcons.Documents,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(RitimoTheme.spacing.md)) {
+                        docs.forEach { doc ->
+                            val sizeMb = (doc.fileSizeBytes.toFloat() / (1024f * 1024f)).toString().take(3)
+
+                            RitimoGlassCard(modifier = Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = doc.title,
+                                            style = RitimoTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                            color = RitimoTheme.colors.onSurface
+                                        )
+
+                                        RitimoStatusBadge(
+                                            text = doc.category.displayName.uppercase(),
+                                            type = BadgeType.PRIMARY
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
+
+                                    Text(
+                                        text = "${doc.fileName} • $sizeMb MB (${doc.fileExtension.uppercase()})",
+                                        style = RitimoTheme.typography.bodySmall,
+                                        color = RitimoTheme.colors.primary
+                                    )
+
+                                    if (!doc.notes.isNullOrBlank()) {
+                                        Spacer(modifier = Modifier.height(RitimoTheme.spacing.xs))
+                                        Text(
+                                            text = "Obs.: ${doc.notes}",
+                                            style = RitimoTheme.typography.bodyMedium,
+                                            color = RitimoTheme.colors.onSurfaceVariant
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(RitimoTheme.spacing.md))
+
+                                    RitimoPrimaryButton(
+                                        text = "Abrir documento",
+                                        onClick = { viewModel.openDocument(doc.fileUri) },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

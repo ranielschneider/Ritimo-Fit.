@@ -14,12 +14,14 @@ import com.ranielschneider.ritimofit.data.datasource.InMemoryExerciseDataSource
 import com.ranielschneider.ritimofit.data.datasource.InMemoryFoodCatalogDataSource
 import com.ranielschneider.ritimofit.data.datasource.InMemoryMealCompletionDataSource
 import com.ranielschneider.ritimofit.data.datasource.InMemoryStudentDataSource
+import com.ranielschneider.ritimofit.data.datasource.InMemoryStudentDocumentDataSource
 import com.ranielschneider.ritimofit.data.datasource.InMemoryWorkoutAssignmentDataSource
 import com.ranielschneider.ritimofit.data.datasource.InMemoryWorkoutCompletionDataSource
 import com.ranielschneider.ritimofit.data.datasource.InMemoryWorkoutDataSource
 import com.ranielschneider.ritimofit.data.datasource.InMemoryWaterTrackingDataSource
 import com.ranielschneider.ritimofit.data.datasource.MealCompletionDataSource
 import com.ranielschneider.ritimofit.data.datasource.StudentDataSource
+import com.ranielschneider.ritimofit.data.datasource.StudentDocumentDataSource
 import com.ranielschneider.ritimofit.data.datasource.WorkoutAssignmentDataSource
 import com.ranielschneider.ritimofit.data.datasource.WorkoutCompletionDataSource
 import com.ranielschneider.ritimofit.data.datasource.WorkoutDataSource
@@ -31,11 +33,14 @@ import com.ranielschneider.ritimofit.data.repository.EvolutionRepositoryImpl
 import com.ranielschneider.ritimofit.data.repository.ExerciseRepositoryImpl
 import com.ranielschneider.ritimofit.data.repository.FoodCatalogRepositoryImpl
 import com.ranielschneider.ritimofit.data.repository.MealCompletionRepositoryImpl
+import com.ranielschneider.ritimofit.data.repository.StudentDocumentRepositoryImpl
 import com.ranielschneider.ritimofit.data.repository.StudentRepositoryImpl
 import com.ranielschneider.ritimofit.data.repository.WorkoutAssignmentRepositoryImpl
 import com.ranielschneider.ritimofit.data.repository.WorkoutCompletionRepositoryImpl
 import com.ranielschneider.ritimofit.data.repository.WorkoutRepositoryImpl
 import com.ranielschneider.ritimofit.data.repository.WaterTrackingRepositoryImpl
+import com.ranielschneider.ritimofit.domain.model.DefaultFilePickerHandler
+import com.ranielschneider.ritimofit.domain.model.FilePickerHandler
 import com.ranielschneider.ritimofit.domain.repository.AuthRepository
 import com.ranielschneider.ritimofit.domain.repository.DietAssignmentRepository
 import com.ranielschneider.ritimofit.domain.repository.DietRepository
@@ -43,6 +48,7 @@ import com.ranielschneider.ritimofit.domain.repository.EvolutionRepository
 import com.ranielschneider.ritimofit.domain.repository.ExerciseRepository
 import com.ranielschneider.ritimofit.domain.repository.FoodCatalogRepository
 import com.ranielschneider.ritimofit.domain.repository.MealCompletionRepository
+import com.ranielschneider.ritimofit.domain.repository.StudentDocumentRepository
 import com.ranielschneider.ritimofit.domain.repository.StudentRepository
 import com.ranielschneider.ritimofit.domain.repository.WorkoutAssignmentRepository
 import com.ranielschneider.ritimofit.domain.repository.WorkoutCompletionRepository
@@ -63,6 +69,8 @@ val dataModule = module {
     single<MealCompletionDataSource> { InMemoryMealCompletionDataSource() }
     single<WaterTrackingDataSource> { InMemoryWaterTrackingDataSource() }
     single<EvolutionDataSource> { InMemoryEvolutionDataSource() }
+    single<StudentDocumentDataSource> { InMemoryStudentDocumentDataSource() }
+    single<FilePickerHandler> { DefaultFilePickerHandler() }
 
     single<AuthRepository> { AuthRepositoryImpl(get(), get()) }
     single<StudentRepository> { StudentRepositoryImpl(get(), get()) }
@@ -76,4 +84,5 @@ val dataModule = module {
     single<MealCompletionRepository> { MealCompletionRepositoryImpl(get(), get()) }
     single<WaterTrackingRepository> { WaterTrackingRepositoryImpl(get(), get()) }
     single<EvolutionRepository> { EvolutionRepositoryImpl(get(), get()) }
+    single<StudentDocumentRepository> { StudentDocumentRepositoryImpl(get(), get()) }
 }

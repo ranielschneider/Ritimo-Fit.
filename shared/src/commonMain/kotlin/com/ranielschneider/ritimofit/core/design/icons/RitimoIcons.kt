@@ -444,6 +444,46 @@ object RitimoIcons {
         }.build()
     }
 
+    val Documents: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "Documents",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(14f, 2f)
+                horizontalLineTo(6f)
+                curveTo(4.9f, 2f, 4.01f, 2.9f, 4.01f, 4f)
+                lineTo(4f, 20f)
+                curveTo(4f, 21.1f, 4.89f, 22f, 5.99f, 22f)
+                horizontalLineTo(18f)
+                curveTo(19.1f, 22f, 20f, 21.1f, 20f, 20f)
+                verticalLineTo(8f)
+                lineTo(14f, 2f)
+                close()
+                moveTo(16f, 18f)
+                horizontalLineTo(8f)
+                verticalLineTo(16f)
+                horizontalLineTo(16f)
+                verticalLineTo(18f)
+                close()
+                moveTo(16f, 14f)
+                horizontalLineTo(8f)
+                verticalLineTo(12f)
+                horizontalLineTo(16f)
+                verticalLineTo(14f)
+                close()
+                moveTo(13f, 9f)
+                verticalLineTo(3.5f)
+                lineTo(18.5f, 9f)
+                horizontalLineTo(13f)
+                close()
+            }
+        }.build()
+    }
+
     // Navigation Tab Icons
     val Dashboard: ImageVector by lazy {
         ImageVector.Builder(

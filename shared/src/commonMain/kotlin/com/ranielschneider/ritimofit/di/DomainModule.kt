@@ -1,12 +1,14 @@
 package com.ranielschneider.ritimofit.di
 
 import com.ranielschneider.ritimofit.domain.usecase.AddBodyMeasurementUseCase
+import com.ranielschneider.ritimofit.domain.usecase.AddStudentDocumentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.AddWeightRecordUseCase
 import com.ranielschneider.ritimofit.domain.usecase.AssignDietToStudentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.AssignWorkoutToStudentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.CompleteMealUseCase
 import com.ranielschneider.ritimofit.domain.usecase.CompleteWorkoutUseCase
 import com.ranielschneider.ritimofit.domain.usecase.DeleteDietUseCase
+import com.ranielschneider.ritimofit.domain.usecase.DeleteStudentDocumentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.DeleteWeightRecordUseCase
 import com.ranielschneider.ritimofit.domain.usecase.ForgotPasswordUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetCurrentUserUseCase
@@ -17,6 +19,7 @@ import com.ranielschneider.ritimofit.domain.usecase.GetExerciseDetailUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetMealCompletionsForStudentUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentDetailUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentDietAssignmentsUseCase
+import com.ranielschneider.ritimofit.domain.usecase.GetStudentDocumentsUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentEvolutionUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentWorkoutAssignmentsUseCase
 import com.ranielschneider.ritimofit.domain.usecase.GetStudentWorkoutsUseCase
@@ -68,6 +71,9 @@ val domainModule = module {
     factory { AddWeightRecordUseCase(get()) }
     factory { DeleteWeightRecordUseCase(get()) }
     factory { AddBodyMeasurementUseCase(get()) }
+    factory { GetStudentDocumentsUseCase(get()) }
+    factory { AddStudentDocumentUseCase(get()) }
+    factory { DeleteStudentDocumentUseCase(get()) }
     factory { LoginUseCase(get()) }
     factory { ForgotPasswordUseCase(get()) }
     factory { RegisterUserUseCase(get()) }

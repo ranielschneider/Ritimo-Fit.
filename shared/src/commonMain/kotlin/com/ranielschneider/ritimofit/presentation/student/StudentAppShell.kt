@@ -11,7 +11,6 @@ import com.ranielschneider.ritimofit.core.design.icons.RitimoIcons
 import com.ranielschneider.ritimofit.presentation.navigation.MainNavigationViewModel
 import com.ranielschneider.ritimofit.presentation.navigation.NavigationTabItem
 import com.ranielschneider.ritimofit.presentation.navigation.RitimoBottomNavigation
-import com.ranielschneider.ritimofit.presentation.navigation.RoutePlaceholderScreen
 import com.ranielschneider.ritimofit.presentation.navigation.StudentRoute
 import com.ranielschneider.ritimofit.presentation.navigation.WorkoutsSubRoute
 
@@ -128,10 +127,7 @@ fun StudentAppShell(
                     StudentEvolutionScreen()
                 }
                 is StudentRoute.Profile -> {
-                    RoutePlaceholderScreen(
-                        badgeText = "ÁREA DO ALUNO",
-                        title = "Seu Perfil de Aluno",
-                        description = "Exames, documentos, relatórios e encerramento de sessão.",
+                    StudentProfileScreen(
                         onLogout = { viewModel.logout() }
                     )
                 }
